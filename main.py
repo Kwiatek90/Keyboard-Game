@@ -12,8 +12,6 @@ class Game_stats():
         self.letter_generation_y = -60
         self.letter_speed = 2
         self.game_active = False
-        
-        #Score za poziom
         self.level_1_score = 10
         self.level_2_score = 20
         self.level_3_score = 40
@@ -24,28 +22,23 @@ class Game_stats():
             self.game_active = False
             letters_group.empty()
             
-    def difficult(self):
+    def change_difficult(self):
         if self.score >= 1000:
-            self.score += self.level_4_score
-            self.level = 4
-            self.letter_generation_time = 100
-            self.letter_generation_y = -15
-            self.letter_speed = 5
+            self.update_difficult(self.level_4_score, 4, 100, -15, 5)
         elif self.score >= 400:
-            self.score += self.level_3_score
-            self.level = 3
-            self.letter_generation_time = 250
-            self.letter_generation_y = -30
-            self.letter_speed = 4
+            self.update_difficult(self.level_3_score, 3, 250, -30, 4)
         elif self.score >= 100:
-            self.score += self.level_2_score
-            self.level = 2
-            self.letter_generation_time = 500
-            self.letter_generation_y = -45
-            self.letter_speed = 3
+            self.update_difficult(self.level_2_score, 2, 500, -45, 3)
         elif self.score >= 0:
             self.score += self.level_1_score
-              
+            
+    def update_difficult(self, level_score, level, letter_generation_time, letter_genertion_y, letter_speed):
+        self.score += level_score
+        self.level = level
+        self.letter_generation_time = letter_generation_time
+        self.letter_generation_y = letter_genertion_y
+        self.letter_speed = letter_speed
+        
     def update(self):
         self.check_lives()
 
@@ -63,8 +56,8 @@ class Letter(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
         for letter in string.ascii_lowercase:
             if keys[getattr(pygame, f"K_{letter}")] and self.letter_click == f"K_{letter}":
-                self.kill()#tutaj if zalezne od levelu
-                game_stats.difficult()
+                self.kill()
+                game_stats.change_difficult()
                    
     def destroy(self):
         if self.rect.y >= 500:
@@ -76,25 +69,13 @@ class Letter(pygame.sprite.Sprite):
         self.destroy()
         self.kill_letter()
         
+def update_stats_screen(stat_text, stat_value, width, height):
+    stat_text  = text_game_font.render(f'{stat_text}: {stat_value}', False, 'White')
+    stat_text_rect = stat_text.get_rect(center = (width, height))
+    screen.blit(stat_text, stat_text_rect)
+    return stat_value
 
-def update_score():
-    score_text = text_game_font.render(f'Score: {game_stats.score}', False, 'White')
-    score_text_rect = score_text.get_rect(center = (490, 455))
-    screen.blit(score_text, score_text_rect)
-    return game_stats.score
-
-def update_lives():
-    lives_text = text_game_font.render(f'Lives: {game_stats.lives}', False, 'White')
-    lives_text_rect = lives_text.get_rect(center = (340, 455))
-    screen.blit(lives_text, lives_text_rect)
-    return game_stats.lives
-
-def update_level():
-    level_text = text_game_font.render(f'Level: {game_stats.level}', False, 'White')
-    level_text_rect = level_text.get_rect(center = (630, 455))
-    screen.blit(level_text, level_text_rect)
-    return game_stats.level
-
+#Init PyGame
 pygame.init()
 screen = pygame.display.set_mode((1000,500))
 pygame.display.set_caption("Letter Strike")
@@ -153,15 +134,13 @@ while True:
                 game_stats.letter_generation_y = -60
                 game_stats.letter_speed = 2
             
-                
     if game_stats.game_active:
         screen.blit(background_surf, (0,0))
         screen.blit(board, board_rect)
-        level = update_level()
-        lives = update_lives()
-        score = update_score()
+        score = update_stats_screen('Score', game_stats.score, 490, 455)
+        lives = update_stats_screen('Lives', game_stats.lives, 340, 455)
+        level = update_stats_screen('Level', game_stats.level, 640, 455)
         game_stats.update()
-
         letters_group.draw(screen)
         letters_group.update()
 
